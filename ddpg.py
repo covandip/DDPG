@@ -11,4 +11,8 @@ import gym
 env = gym.make("MountainCarContinuous-v0")
 env.reset()
 
+class DDPG:
+    def __init__(self, env, actorParams, criticParams):
+        pass
+        
 
