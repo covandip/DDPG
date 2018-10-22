@@ -12,7 +12,7 @@ class Actor:
         :param tf_session: the tensorflow session
         :param state_dim: Int for the state dimensionality
         :param action_dim: Int for the action dimensionality
-        :param params: Tuple for the model parameters, should be (layer1 size, layer2 size
+        :param params: Tuple for the model parameters, should be (layer1 size, layer2 size)
         """
         self._tf_session = tf_session
         self._state_dim = state_dim
@@ -22,7 +22,7 @@ class Actor:
         self._model, self._model_weights, self._model_input = self._initialize_network(params)
 
         # create target model
-        self._target_model, self._target_model, self._target_input = self._initialize_network(params)
+        self._target_model, self._target_weights, self._target_input = self._initialize_network(params)
 
         # create gradients for training
         self._action_gradients = tensorflow.placeholder(tensorflow.float32, [None, self._action_dim])
@@ -46,7 +46,7 @@ class Actor:
         hidden2 = Dense(params[1], activation = 'relu')(hidden1)
         outputs = Dense(self._action_dim, activation = 'sigmoid')(hidden2)
         model = Model(input = inputs, output=outputs)
-        return model, model.trainable_weights, inputs
+        return model, model.weights, inputs
 
 
     def train(self, state_trajectory, )
