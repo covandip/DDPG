@@ -1,5 +1,6 @@
 import tensorflow
-import keras
+from keras.layers import Input, Dense
+from keras.models import Model
 
 class Actor:
     """
@@ -14,7 +15,7 @@ class Actor:
         :param action_dim: Int for the action dimensionality
         :param params: Tuple for the model parameters, should be (layer1 size, layer2 size)
         """
-        self._tf_session = tf_session
+        self._session = tf_session
         self._state_dim = state_dim
         self._action_dim = action_dim
         
@@ -25,16 +26,15 @@ class Actor:
         self._target_model, self._target_weights, self._target_input = self._initialize_network(params)
 
         # create gradients for training
-        self._action_gradients = tensorflow.placeholder(tensorflow.float32, [None, self._action_dim])
-        self._param_gradients = tensorflow.gradients(self._model.output, self._model_weights, -self._action_gradients)
-        self._gradients = zip(self._action_gradients, self._param_gradients)
+        self._q_gradients = tensorflow.placeholder(tensorflow.float32, [None, self._action_dim])
+        self._param_gradients = tensorflow.gradients(self._model.output, self._model_weights, -self._q_gradients)
+        self._gradients = zip(self._param_gradients, self._model_weights)
         
         # create optimizer
-        self._optimizer = tensorflow.train.AdamOptimizer(param[2]).apply_gradients(self._gradients)
+        self._optimizer = tensorflow.train.AdamOptimizer(params[2]).apply_gradients(self._gradients)
         
         # initialize session
-        self._tf_session.run(tensorflow.initialize_all_variables())
-
+        self._session.run(tensorflow.global_variables_initializer())
 
     def _initialize_network(self, params):
         """
@@ -42,11 +42,17 @@ class Actor:
         """
 
         inputs = Input(shape=[self._state_dim])
-        hidden1 = Dense(params[0], activation = 'relu')(inputs)
-        hidden2 = Dense(params[1], activation = 'relu')(hidden1)
+        hidden = Dense(params[0], activation = 'relu')(inputs)
+        hidden = Dense(params[1], activation = 'relu')(hidden)
         outputs = Dense(self._action_dim, activation = 'sigmoid')(hidden2)
-        model = Model(input = inputs, output=outputs)
+        model = Model(inputs = inputs, outputs =outputs)
         return model, model.weights, inputs
 
+    def train(self, state_sequence, q_gradients):
+        self_session.run(self._optimizer, feed_dict={
+            self._q_gradients:q_gradients,
+            self._model_input:state_sequence
+            })
 
-    def train(self, state_trajectory, )
+
+
