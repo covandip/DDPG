@@ -11,21 +11,62 @@ from critic import Critic
 import tensorflow
 import gym
 
-env = gym.make("MountainCarContinuous-v0")
-env.reset()
 
 class DDPG:
-    def __init__(self, batch_size, mem_size, 
+    def __init__(self, env, batch_size, mem_size, 
             discount, actor_params, critic_params):
        self._batch_size = batch_size
        self._mem_size = mem_size
        self._discount = discount
        self._sess = tensorflow.Session()
-
-       self._actor = Actor(sess, actor_params)
-       self._critic = Critic(sess, critic_params)
+       self._env = env
+       self._state_dim = env.observation_space.shape[0]
+       self._action_dim = env.action_space.shape[0]
+       self._actor = Actor(self._sess, self._state_dim, self._action_dim, actor_params)
+       self._critic = Critic(self._sess, self._state_dim, self._action_dim, critic_params)
        self._memory = ReplayBuffer(mem_size)
 
     def get_action(self, state):
         return self._actor._model.predict(state)
 
+    def train(self):
+        '''
+        No training takes place until the replay buffer contains
+        at least batch size number of experiences
+        '''
+
+        if(self._memory.size() > self._batch_size):
+            self._train()
+    
+    def _train(self):
+        states, actions, rewards, done, next_states = self._memory.sample(self._batch_size)
+        self._train_critic(states, actions, rewards, done, next_states)
+        action_gradients = self._critic.action_gradients(states, actions)
+        self._actor.train(states, action_gradients)
+
+    def q_estimate(self, state, action):
+        return self._critic._model.predict(state, action)
+    
+    def _get_q_targets(self, next_states, done, rewards):
+        '''
+        q = r if done else =  r + gamma * qnext
+        '''
+        # use actor network to determine the next action under current policy
+        # estimate Q values from the critic network
+
+        actions = self.get_action(next_states)
+        qnext = self.q_estimate(next_states, actions)
+
+        q_targets = [reward if end else reward * self._discount * next_q
+                for (reward, next_q, end)
+                in zip(rewards, qnext, done)]
+        return q_targets
+
+    def _train_critic(self, states, actions, rewards, done, next_state):
+        q_targets = self._get_q_targets(next_states, done, rewards)
+    
+    def experience(self, state, action, reward, done, next_state):
+        # store in replay buffer
+        self._memory.add(state, action, reward, done, next_state)
+
+        self.train()

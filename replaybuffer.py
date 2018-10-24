@@ -15,12 +15,12 @@ class ReplayBuffer:
         self.buffer_size = buffer_size
         self.buffer = deque()
     
-    def add(self, state,action, reward, time, next_state):
+    def add(self, state,action, reward, done, next_state):
         if (len(self.buffer) < self.buffer_size):
-            self.buffer.append((state,action,reward,time,next_state))
+            self.buffer.append((state,action,reward,done,next_state))
         else:
             self.buffer.popleft()
-            self.buffer.append((state,action,reward,time,next_state))
+            self.buffer.append((state,action,reward,done,next_state))
     
     def sample(self, batch_size):
         """
@@ -41,10 +41,10 @@ class ReplayBuffer:
         state_batch = np.array([experience[0] for experience in batch])
         action_batch = np.array([experience[1] for experience in batch])
         reward_batch = np.array([experience[2] for experience in batch])
-        time_batch  = np.array([experience[3] for experience in batch])
+        done_batch  = np.array([experience[3] for experience in batch])
         next_state_batch = np.array([experience[4] for experience in batch])
         
-        return state_batch, action_batch, reward_batch, time_batch, next_state_batch
+        return state_batch, action_batch, reward_batch, done_batch, next_state_batch
     
     def flush(self):
         self.buffer.clear()

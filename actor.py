@@ -44,7 +44,7 @@ class Actor:
         inputs = Input(shape=[self._state_dim])
         hidden = Dense(params[0], activation = 'relu')(inputs)
         hidden = Dense(params[1], activation = 'relu')(hidden)
-        outputs = Dense(self._action_dim, activation = 'sigmoid')(hidden2)
+        outputs = Dense(self._action_dim, activation = 'sigmoid')(hidden)
         model = Model(inputs = inputs, outputs =outputs)
         return model, model.weights, inputs
 
