@@ -6,7 +6,7 @@ class Actor:
     """
     This class will approximate an action policy A: S -> A
     """
-    def __init__(self, tf_session, state_dim, action_dim, params):
+    def __init__(self, tf_session, state_dim, action_dim, action_min, action_max, params):
         """
         Constructor for the actor network
 
@@ -49,7 +49,7 @@ class Actor:
         return model, model.weights, inputs
 
     def train(self, state_sequence, q_gradients):
-        self_session.run(self._optimizer, feed_dict={
+        self._session.run(self._optimizer, feed_dict={
             self._q_gradients:q_gradients,
             self._model_input:state_sequence
             })
